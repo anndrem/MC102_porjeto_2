@@ -1,6 +1,6 @@
 ### TODO: PREENCHA SUAS INFORMAÇÕES AQUI ###
-# Nome #01 (quem entregou o código):    [NOME COMPLETO #01] 
-# RA #01 (quem entregou o código):      [RA #01]
+# Nome #01 (quem entregou o código):    André de Almeida Maximiano 
+# RA #01 (quem entregou o código):      306387
 # Nome #02:                             [NOME COMPLETO #02]
 # RA #02:                               [RA #02]
 from basic_players import Player
