@@ -28,7 +28,7 @@ class CheckCards():
         return cards_idx
 
     def theresIsManilha(self):
-        idx = False
+        idx = -1
         my_manilhas = []
         cards_idx = self._listIdx()
         
