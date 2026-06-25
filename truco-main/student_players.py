@@ -16,22 +16,23 @@ class SmartPlayer(Player):
     def __init__(self, ra, name):
         super().__init__(ra, name) 
         self._respond = RESPOSTA['aceitar']
+        self._manilha = False
+        self.my_manilhas = []
 
-    def _theresManilha(self,top_card):
-        manilhas = {}   
+    def _theresIsManilha(self,top_card):
         idx = -1
 
         idx_c1, idx_n1 = ORDER_CARDS.index(self.cards[0][0]), ORDER_NIPES.index(self.cards[0][1])
         idx_c2, idx_n2 = ORDER_CARDS.index(self.cards[1][0]), ORDER_NIPES.index(self.cards[1][1])
         idx_c3, idx_n3 = ORDER_CARDS.index(self.cards[2][0]), ORDER_NIPES.index(self.cards[2][1])
 
+
         for key, value in [[idx_c1, idx_n1], [idx_c2, idx_n2], [idx_c3, idx_n3]]:
             if key == ORDER_CARDS.index(top_card[0]) + 1:
                 idx = self.cards.index((ORDER_CARDS[key], ORDER_NIPES[value]))
-                manilhas[ORDER_CARDS[key]] = ORDER_NIPES[value]
+                self.my_manilhas.append(idx)
 
-
-        return (True, idx) if idx != -1 else (False, -1)
+        return True if idx != -1 else False
     
     def _sortCards(self):
         if len(self.cards) < 3:
@@ -41,27 +42,30 @@ class SmartPlayer(Player):
         idx_c2, idx_n2 = ORDER_CARDS.index(self.cards[1][0]), ORDER_NIPES.index(self.cards[1][1])
         idx_c3, idx_n3 = ORDER_CARDS.index(self.cards[2][0]), ORDER_NIPES.index(self.cards[2][1])
 
-        verification_idx = [[idx_c1, idx_n1], [idx_c2, idx_n2], [idx_c3, idx_n3]]
-        verification_idx.sort(key= lambda x: x[0], reverse=True)
+        cards_idx = [[idx_c1, idx_n1], [idx_c2, idx_n2], [idx_c3, idx_n3]]
+        cards_idx.sort(key= lambda x: x[0], reverse=True)
         
-        sorted_cards = [(ORDER_CARDS[verification_idx[0][0]], ORDER_NIPES[verification_idx[0][1]]), (ORDER_CARDS[verification_idx[1][0]], ORDER_NIPES[verification_idx[1][1]]), (ORDER_CARDS[verification_idx[2][0]], ORDER_NIPES[verification_idx[2][1]])]
+        sorted_cards = [(ORDER_CARDS[cards_idx[0][0]], ORDER_NIPES[cards_idx[0][1]]), (ORDER_CARDS[cards_idx[1][0]], ORDER_NIPES[cards_idx[1][1]]), (ORDER_CARDS[cards_idx[2][0]], ORDER_NIPES[cards_idx[2][1]])]
         return sorted_cards
 
     '''O JOGO ESTA DEFINIDO AQUI'''
     def play(self, top_card, play_hist, score_hist):
-        
-        manilha = (False, -1)
         if len(self.cards) == 3:
-            # print(f'CARTAS NAO ORDENADAS:\n--{self.name}: {self.cards}')
-            manilha = self._theresManilha(top_card)
             self.cards = self._sortCards()
-            # print(f'CARTAS ORDENADAS:\n--{self.name}: {self.cards}')
+            self._manilha = self._theresIsManilha(top_card)
 
+        if len(self.my_manilhas) == 0:
+            self._manilha = False
+        else: 
+            self._manilha = True
 
-        if manilha[0]:
-            idx_manilha = manilha[1]
-            print(f'JOGANDO MANILHA:\n--vira{top_card}: {self.cards[idx_manilha]}')
-            return DECISAO['normal'], self.cards[idx_manilha]
+        if self._manilha:
+            pedir_truco = True if len(self.my_manilhas) > 1 else False
+            idx_manilha = self.my_manilhas[-1]
+            self.my_manilhas.pop()
+
+            return DECISAO['truco'] if pedir_truco else DECISAO['normal'], self.cards[idx_manilha]
+        
         if self._cards:
             return DECISAO['normal'], self.cards[0]
             
