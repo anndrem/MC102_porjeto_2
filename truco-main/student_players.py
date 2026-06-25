@@ -5,6 +5,10 @@
 # RA #02:                               [RA #02]
 from basic_players import Player
 
+
+
+
+# TODO: criar classe para tratar a verificacao das cartas e encapsular o codgio
 DECISAO = {'encoberta': 0, 'normal': 1, 'truco': 2}
 RESPOSTA = {'correr': 0, 'aceitar': 1, 'aumentar': 2}
 
@@ -12,7 +16,6 @@ ORDER_CARDS = ['4' ,'5' ,'6' ,'7' ,'Q' ,'J' ,'K' ,'A' ,'2' ,'3']
 ORDER_NIPES = ['Diamonds', 'Spades', 'Hearts', 'Clubs']
 
 class SmartPlayer(Player):
-    
     def __init__(self, ra, name):
         super().__init__(ra, name) 
         self._respond = RESPOSTA['aceitar']
@@ -59,11 +62,11 @@ class SmartPlayer(Player):
         else: 
             self._manilha = True
 
+        # TODO: arrumar o (index out of range) da manilha - acontece quando temos mais de uma manilha que carrega o index antigo da carta (sugestao: ao inves de usar o index, salvar a propria manilha como carta e depois procurar o index)
         if self._manilha:
-            pedir_truco = True if len(self.my_manilhas) > 1 else False
+            pedir_truco = True if score_hist[-1][-1] == 1 else False
             idx_manilha = self.my_manilhas[-1]
             self.my_manilhas.pop()
-
             return DECISAO['truco'] if pedir_truco else DECISAO['normal'], self.cards[idx_manilha]
         
         if self._cards:
@@ -77,6 +80,7 @@ class SmartPlayer(Player):
         
         if current_score <= 9 and teams_score[0] <= 10 and teams_score[1] <= 10:
             self._respond = RESPOSTA['aumentar']
+
         return self._respond
 
 def pair_name():
