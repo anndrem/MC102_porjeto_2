@@ -1,26 +1,11 @@
 ### TODO: PREENCHA SUAS INFORMAÇÕES AQUI ###
-<<<<<<< HEAD
-# Nome #01 (quem entregou o código):    [NOME COMPLETO #01] 
-# RA #01 (quem entregou o código):      [RA #01]
-# Nome #02:                             Vinicius Brasil Turibio da Silva
-# RA #02:                               306565
-=======
 # Nome #01 (quem entregou o código):    André de Almeida Maximiano 
 # RA #01 (quem entregou o código):      306387
 # Nome #02:                             [NOME COMPLETO #02]
 # RA #02:                               [RA #02]
->>>>>>> origin/main
 from basic_players import Player
 
 
-<<<<<<< HEAD
-# Jogador que não faz nada. Substitua esta classe para criar as suas, devem herdar da classe Player
-class NonePlayer(Player):
-    # Se estiver dúvida sobre como começar olhe os players prontos em basic_players.py e o ReadMe
-    def __init__(self, ra, name):
-        super().__init__(ra, name) # Nome do Jogador
-=======
->>>>>>> origin/main
 
 
 # TODO: criar classe para tratar a verificacao das cartas e encapsular o codgio
@@ -99,20 +84,10 @@ class SmartPlayer(Player):
         return self._respond
 
 def pair_name():
-<<<<<<< HEAD
-    return "Butequeiros de CC"  # Defina aqui o nome da sua dupla
-=======
     return 'Butequeiros de CC' 
->>>>>>> origin/main
 
 
 def create_pair():
-<<<<<<< HEAD
-    p1 = NonePlayer(11, "Stalin")
-    p2 = NonePlayer(12, "Lenin")
-    return (p1,p2)  # Defina aqui a dupla de jogadores. Deve ser uma tupla com dois jogadores.
-=======
     p1 = SmartPlayer(11, 'Stalin')
     p2 = SmartPlayer(12, 'Lenin')
     return (p1, p2)
->>>>>>> origin/main
