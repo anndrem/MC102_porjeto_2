@@ -13,73 +13,88 @@ RESPOSTA = {'correr': 0, 'aceitar': 1, 'aumentar': 2}
 
 class CheckCards():
     def __init__(self, hand_cards, top_card = None):
-        self.hand_cards = hand_cards
-        self.top_card = top_card
-        self.ORDER_CARDS = ['4' ,'5' ,'6' ,'7' ,'Q' ,'J' ,'K' ,'A' ,'2' ,'3']
-        self.ORDER_NIPES = ['Diamonds', 'Spades', 'Hearts', 'Clubs']
+        self._hand_cards = hand_cards
+        self._top_card = top_card
+        self._ORDER_CARDS = ['4' ,'5' ,'6' ,'7' ,'Q' ,'J' ,'K' ,'A' ,'2' ,'3']
+        self._ORDER_NIPES = ['Diamonds', 'Spades', 'Hearts', 'Clubs']
         
 
     def _listIdx(self):
-        idx_c1, idx_n1 = self.ORDER_CARDS.index(self.hand_cards[0][0]), self.ORDER_NIPES.index(self.hand_cards[0][1])
-        idx_c2, idx_n2 = self.ORDER_CARDS.index(self.hand_cards[1][0]), self.ORDER_NIPES.index(self.hand_cards[1][1])
-        idx_c3, idx_n3 = self.ORDER_CARDS.index(self.hand_cards[2][0]), self.ORDER_NIPES.index(self.hand_cards[2][1])
+        idx_c1, idx_n1 = self._ORDER_CARDS.index(self._hand_cards[0][0]), self._ORDER_NIPES.index(self._hand_cards[0][1])
+        idx_c2, idx_n2 = self._ORDER_CARDS.index(self._hand_cards[1][0]), self._ORDER_NIPES.index(self._hand_cards[1][1])
+        idx_c3, idx_n3 = self._ORDER_CARDS.index(self._hand_cards[2][0]), self._ORDER_NIPES.index(self._hand_cards[2][1])
         
         cards_idx = [[idx_c1, idx_n1], [idx_c2, idx_n2], [idx_c3, idx_n3]]
         return cards_idx
 
-    def theresIsManilha(self):
-        idx = False
-        my_manilhas = []
+    def thereIsManilha(self):
+        found = False
+        manilhas = []
         cards_idx = self._listIdx()
         
         for card, nipe in cards_idx:
-            if card == self.ORDER_CARDS.index(self.top_card[0]) + 1:
-                idx = self.hand_cards.index((self.ORDER_CARDS[card], self.ORDER_NIPES[nipe]))
-                my_manilhas.append(idx)
-
-        return [True, my_manilhas] if idx != -1 else [False, [-1]]
+            if card == 1 + self._ORDER_CARDS.index(self._top_card[0]):
+                found = True
+                manilha = (self._ORDER_CARDS[card], self._ORDER_NIPES[nipe])
+                manilhas.append(manilha)
+        
+        return [found, manilhas]
     
     def sortCards(self):
-        if len(self.hand_cards) < 3:
-            return None
+        if len(self._hand_cards) < 3:
+            return self._hand_cards
         
         cards_idx = self._listIdx()
-        cards_idx.sort(key= lambda x: x[0], reverse=True)
+        cards_idx.sort(key= lambda c: c[0], reverse=True)
         
-        sorted_cards = [(self.ORDER_CARDS[cards_idx[0][0]], self.ORDER_NIPES[cards_idx[0][1]]), 
-                        (self.ORDER_CARDS[cards_idx[1][0]], self.ORDER_NIPES[cards_idx[1][1]]),
-                        (self.ORDER_CARDS[cards_idx[2][0]], self.ORDER_NIPES[cards_idx[2][1]])]
-        
+        sorted_cards = [(self._ORDER_CARDS[cards_idx[0][0]], self._ORDER_NIPES[cards_idx[0][1]]), 
+                        (self._ORDER_CARDS[cards_idx[1][0]], self._ORDER_NIPES[cards_idx[1][1]]),
+                        (self._ORDER_CARDS[cards_idx[2][0]], self._ORDER_NIPES[cards_idx[2][1]])]
         return sorted_cards
+    
+class PlayersHand(CheckCards):
+    def __init__(self, hand_cards, top_card):
+        super().__init__(hand_cards, top_card)
+        self._hand_cards = hand_cards
+        self._manilhas = []
+
+    def manilhas(self):
+        if len(self._hand_cards) < 3:
+            return len(self._manilhas) > 0 
+           
+        there_is_manilha = self.thereIsManilha()
+
+        if not there_is_manilha[0]:
+            return False
+
+        self._manilhas = there_is_manilha[1]
+        return True
+    
+    def use_manilha(self):          
+        return self._hand_cards.index(self._manilhas.pop())
+
 
 class SmartPlayer(Player):
     def __init__(self, ra, name):
         super().__init__(ra, name) 
         self._respond = RESPOSTA['aceitar']
-        self._manilha = [False,[-1]]
-        self.my_manilhas = []
         self._CheckCards = CheckCards
-
+        self._checker_hand = PlayersHand
+    
+    def _start(self, top_card):
+            player_checker = self._CheckCards(self.cards, top_card)
+            self.cards = player_checker.sortCards()
+       
     '''O JOGO ESTA DEFINIDO AQUI'''
     def play(self, top_card, play_hist, score_hist):
-        player_checker = self._CheckCards(self.cards, top_card)
-
         if len(self.cards) == 3:
-            self.cards = player_checker.sortCards()
-            self._manilha = player_checker.theresIsManilha()
-            self.my_manilhas = self._manilha[1]
+            self._start(top_card)
 
-        if len(self.my_manilhas) == 0:
-            self._manilha[0] = False
-        else: 
-            self._manilha[0] = True
+        my_hand = self._checker_hand(self.cards, top_card)
 
-        # TODO: arrumar o (index out of range) da manilha - acontece quando temos mais de uma manilha que carrega o index antigo da carta 
-        # (sugestao: ao inves de usar o index, salvar a propria manilha como carta e depois procurar o index)
-        if self._manilha[1]:
+        if my_hand.manilhas():
             pedir_truco = True if score_hist[-1][-1] == 1 else False
-            idx_manilha = self.my_manilhas[-1]
-            self.my_manilhas.pop()
+            idx_manilha = my_hand.use_manilha()
             return DECISAO['truco'] if pedir_truco else DECISAO['normal'], self.cards[idx_manilha]
         
         if self._cards:
