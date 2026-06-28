@@ -16,66 +16,120 @@ class CheckCards():
         self._hand_cards = hand_cards
         self._top_card = top_card
         self._ORDER_CARDS = ['4' ,'5' ,'6' ,'7' ,'Q' ,'J' ,'K' ,'A' ,'2' ,'3']
-        self._ORDER_NIPES = ['Diamonds', 'Spades', 'Hearts', 'Clubs']
+        self._ORDER_RANK = ['Diamonds', 'Spades', 'Hearts', 'Clubs']
         
 
     def _listIdx(self):
         order_c_idx = lambda x: self._ORDER_CARDS.index(x)
-        order_n_idx = lambda x: self._ORDER_NIPES.index(x)
+        order_r_idx = lambda x: self._ORDER_RANK.index(x)
 
-
-        idx_c1, idx_n1 = order_c_idx(self._hand_cards[0][0]), order_n_idx(self._hand_cards[0][1])
-        idx_c2, idx_n2 = order_c_idx(self._hand_cards[1][0]), order_n_idx(self._hand_cards[1][1])
-        idx_c3, idx_n3 = order_c_idx(self._hand_cards[2][0]), order_n_idx(self._hand_cards[2][1])
+        cards_idx = [
+            (order_c_idx(card), order_r_idx(rank)) 
+            for card, rank in self._hand_cards
+            ]
         
-        cards_idx = [[idx_c1, idx_n1], [idx_c2, idx_n2], [idx_c3, idx_n3]]
         return cards_idx
 
-    def thereIsManilha(self):
+    def thereIsTrump(self):
         found = False
-        manilhas = []
+        trumps = []
         cards_idx = self._listIdx()
         
-        for card, nipe in cards_idx:
+        for card, rank in cards_idx:
             if card == 1 + self._ORDER_CARDS.index(self._top_card[0]):
                 found = True
-                manilha = (self._ORDER_CARDS[card], self._ORDER_NIPES[nipe])
-                manilhas.append(manilha)
+                trump = (self._ORDER_CARDS[card], self._ORDER_RANK[rank])
+                trumps.append(trump)
         
-        return [found, manilhas]
+        return (found, trumps)
     
     def sortCards(self):
-        if len(self._hand_cards) < 3:
-            return self._hand_cards
-        
+
         cards_idx = self._listIdx()
         cards_idx.sort(key= lambda c: c[0], reverse=True)
-        
-        sorted_cards = [(self._ORDER_CARDS[cards_idx[0][0]], self._ORDER_NIPES[cards_idx[0][1]]), 
-                        (self._ORDER_CARDS[cards_idx[1][0]], self._ORDER_NIPES[cards_idx[1][1]]),
-                        (self._ORDER_CARDS[cards_idx[2][0]], self._ORDER_NIPES[cards_idx[2][1]])]
+    
+        sorted_cards = [
+            (self._ORDER_CARDS[card] , self._ORDER_RANK[rank])
+            for card, rank in cards_idx
+        ]
+    
         return sorted_cards
     
+    def is_higher_than(self, oponent_card):
+        cards_idx = self._listIdx()
+        oponent_checker = CheckCards([oponent_card], self._top_card)
+        oponent_trump = oponent_checker.thereIsTrump()
+
+        found = False
+        hihgers_idx = []
+        hihgers = []
+
+        oponent_card_idx = self._ORDER_CARDS.index(oponent_card[0])
+        oponent_rank_idx = self._ORDER_RANK.index(oponent_card[1])
+        
+        for card, rank in cards_idx:
+            if oponent_trump[0] and card == oponent_card_idx and rank > oponent_rank_idx:
+                found = True
+                hihgers_idx.append([card, rank])
+            elif card > oponent_card_idx:
+                found = True
+                hihgers_idx.append([card, rank])
+        
+        if len(hihgers_idx) > 0:
+            hihgers_idx.sort(key= lambda x: x[0])
+            
+            hihgers = [
+                (self._ORDER_CARDS[card_idx], self._ORDER_RANK[rank_idx])
+                for card_idx, rank_idx in hihgers_idx
+            ]
+
+        return (found, hihgers)
+    
 class PlayersHand(CheckCards):
-    def __init__(self, hand_cards, top_card):
+    def __init__(self, position, hand_cards, top_card):
         super().__init__(hand_cards, top_card)
+        self._position = position
         self._hand_cards = hand_cards
-        self._manilhas = []
+        self._trumps = []
 
-    def manilhas(self):
+    def trumps(self):
         if len(self._hand_cards) < 3:
-            return len(self._manilhas) > 0 
+            return len(self._trumps) > 0 
            
-        there_is_manilha = self.thereIsManilha()
+        there_is_trump = self.thereIsTrump()
 
-        if not there_is_manilha[0]:
+        if not there_is_trump[0]:
             return False
 
-        self._manilhas = there_is_manilha[1]
+        self._trumps = there_is_trump[1]
         return True
     
-    def use_manilha(self):
-        return self._hand_cards.index(self._manilhas.pop())
+    def use_trump(self):
+        return self._hand_cards.index(self._trumps.pop())
+
+    def play_check(self, current_round):
+        if len(current_round) == 0:
+            # primeiro a jogar
+            pass
+
+        
+        last_play = current_round[-1]
+        last_position = last_play[0]    
+        last_card = last_play[1]    
+        last_decision = last_play[2]   
+        
+        if last_position % 2 == 0:
+            there_is_higher = self.is_higher_than(last_card)
+            if there_is_higher[0]:
+                return True, there_is_higher[1][0]
+            else:
+                return False, self._hand_cards[-1]
+            
+        elif last_position == self._position: 
+            return False, self._hand_cards[0]
+        
+        else:
+            return False, self._hand_cards[0]
 
 
 class SmartPlayer(Player):
@@ -94,13 +148,21 @@ class SmartPlayer(Player):
         if len(self.cards) == 3:
             self._start(top_card)
 
-        my_hand = self._checker_hand(self.cards, top_card)
+        current_round = play_hist[-1]
+
+        my_hand = self._checker_hand(self.position, self.cards, top_card)
 
 
-        if my_hand.manilhas():
-            pedir_truco = True if score_hist[-1][-1] == 1 else False
-            idx_manilha = my_hand.use_manilha()
-            return DECISAO['truco'] if pedir_truco else DECISAO['normal'], self.cards[idx_manilha]
+        if my_hand.trumps():
+            call_truco = True if score_hist[-1][-1] == 1 else False
+            idx_trump = my_hand.use_trump()
+            return DECISAO['truco'] if call_truco else DECISAO['normal'], self.cards[idx_trump]
+
+        if len(current_round) > 0:
+            play_best = my_hand.play_check(current_round)
+            idx_card = self.cards.index(play_best[1])
+            return DECISAO['normal'], self.cards[idx_card]
+                
         
         if self._cards:
             return DECISAO['normal'], self.cards[0]
