@@ -94,6 +94,12 @@ class SmartPlayer(Player):
         if current_score <= 9 and teams_score[0] <= 10 and teams_score[1] <= 10:
             self._respond = RESPOSTA['aumentar']
 
+        if self._manilha[0]:
+            self._respond = RESPOSTA['aceitar']
+
+        else:
+            self._respond = RESPOSTA['correr']    
+        
         return self._respond
 
 
