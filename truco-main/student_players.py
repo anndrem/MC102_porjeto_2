@@ -44,6 +44,8 @@ class CheckCards():
         return (found, trumps)
     
     def sortCards(self):
+        if len(self._hand_cards) < 2:
+            return self._hand_cards
 
         cards_idx = self._listIdx()
         cards_idx.sort(key= lambda c: c[0], reverse=True)
@@ -54,6 +56,24 @@ class CheckCards():
         ]
     
         return sorted_cards
+    
+    def sortPlays(self, plays):
+        self._hand_cards = self.sortCards()
+
+        last_plays = {
+            pos: card
+            for pos, card, _ in plays
+            if card is not None
+        }
+
+        sorted_plays = [
+            (pos, card)
+            for card in self._hand_cards
+            for pos, player_card in last_plays.items()
+            if player_card == card
+        ]
+
+        return sorted_plays
     
     def is_higher_than(self, oponent_card):
         cards_idx = self._listIdx()
@@ -117,30 +137,48 @@ class PlayersHand(CheckCards):
         current_round = current_hand[slice_round[_round]:]
         return current_round
     
-    def play_check(self, current_hand, id_round):
-        current_round = self._round_plays(current_hand, id_round)
+    def play_check(self, _current_hand, id_round):
+        stronger = False
+        best_play_card = []
+        current_round = self._round_plays(_current_hand, id_round)
 
         if len(current_round) < 1:
             # primeiro a jogar
             return True, self._hand_cards[0]
         
-        last_play =  current_hand[-1]
-        last_position = last_play[0]    
-        last_card = last_play[1]    
-        last_decision = last_play[2]   
         
-        if last_position % 2 == 0:
-            there_is_higher = self.is_higher_than(last_card)
-            if there_is_higher[0]:
-                return True, there_is_higher[1][0]
-            else:
-                return False, self._hand_cards[-1]
-            
-        elif last_position == self._position: 
-            return True, self._hand_cards[0]
+        _last_cards = [
+            card
+            for _,card, _ in current_round
+            if card is not None
+        ]
+
+        checkPlays = CheckCards(_last_cards)
+        sorted_plays = checkPlays.sortPlays(current_round)
+
+        last_play =  sorted_plays[-1]
+        winning_position = last_play[0]    
+        winning_card = last_play[1]    
         
+        if winning_position == self._position: 
+            stronger = False
+            best_play_card = self._hand_cards[0]
+        
+        elif winning_position % 2 == 1:
+            stronger = False
+            best_play_card = self._hand_cards[-1]
+
         else:
-            return True, self._hand_cards[0]
+            there_is_higher = self.is_higher_than(winning_card)
+            if there_is_higher[0]:
+                stronger = True
+                best_play_card = there_is_higher[1][0]
+            else:
+                stronger = False
+                best_play_card = self._hand_cards[-1]
+            
+
+        return stronger, best_play_card
 
     def Good_Hand(self):
         best_cards = 0
@@ -175,13 +213,13 @@ class SmartPlayer(Player):
             player_hand = self._checker_hand(self._position,self.cards,top_card)
             self._good_hand = player_hand.Good_Hand()
 
-    '''O JOGO ESTA DEFINIDO AQUI'''
     def play(self, top_card, play_hist, score_hist):
+        if not self._cards:
+            return 1, None
+
         if len(self.cards) == 3:
             self._start(top_card)
 
-        if not self._cards:
-            return 1, None
 
         my_hand = self._checker_hand(self.position, self.cards, top_card)
 
