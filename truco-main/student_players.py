@@ -115,7 +115,6 @@ class PlayersHand(CheckCards):
         # current_hand funciona por mao
         slice_round = [0, 4, 8]
         current_round = current_hand[slice_round[_round]:]
-
         return current_round
     
     def play_check(self, current_hand, id_round):
@@ -123,7 +122,7 @@ class PlayersHand(CheckCards):
 
         if len(current_round) < 1:
             # primeiro a jogar
-            return self._hand_cards[0]
+            return True, self._hand_cards[0]
         
         last_play =  current_hand[-1]
         last_position = last_play[0]    
@@ -138,10 +137,10 @@ class PlayersHand(CheckCards):
                 return False, self._hand_cards[-1]
             
         elif last_position == self._position: 
-            return False, self._hand_cards[0]
+            return True, self._hand_cards[0]
         
         else:
-            return False, self._hand_cards[0]
+            return True, self._hand_cards[0]
 
     def Good_Hand(self):
         best_cards = 0
@@ -175,6 +174,7 @@ class SmartPlayer(Player):
             self.cards = player_checker.sortCards()
             player_hand = self._checker_hand(self._position,self.cards,top_card)
             self._good_hand = player_hand.Good_Hand()
+
     '''O JOGO ESTA DEFINIDO AQUI'''
     def play(self, top_card, play_hist, score_hist):
         if len(self.cards) == 3:
