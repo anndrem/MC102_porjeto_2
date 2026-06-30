@@ -143,6 +143,25 @@ class PlayersHand(CheckCards):
         else:
             return False, self._hand_cards[0]
 
+    def Good_Hand(self):
+        best_cards = 0
+        cont = 0
+        good_cards = False
+        
+        for carta in self._hand_cards:
+                if carta in self._trumps:
+                   cont += 1
+                   best_cards += 1                
+                if carta not in self._trumps:
+                    if self._ORDER_CARDS.index(carta[0]) >= 6:
+                        cont +=1
+                    if self._ORDER_CARDS.index(carta[0]) > 7:
+                        best_cards +=1
+        if cont ==3 or best_cards >=2:
+            good_cards = True               
+                    
+        return good_cards
+        
 
 class SmartPlayer(Player):
     def __init__(self, ra, name):
@@ -154,7 +173,8 @@ class SmartPlayer(Player):
     def _start(self, top_card):
             player_checker = self._CheckCards(self.cards, top_card)
             self.cards = player_checker.sortCards()
-       
+            player_hand = self._checker_hand(self._position,self.cards,top_card)
+            self._good_hand = player_hand.Good_Hand()
     '''O JOGO ESTA DEFINIDO AQUI'''
     def play(self, top_card, play_hist, score_hist):
         if len(self.cards) == 3:
@@ -181,11 +201,18 @@ class SmartPlayer(Player):
     def respond(self,top_card,play_hist, score_hist):
         current_score = score_hist[-1][-1]
         teams_score = score_hist[-1][-2]
+        my_hand = self._checker_hand(self._position, self.cards, top_card)
         
-        if current_score <= 9 and teams_score[0] <= 10 and teams_score[1] <= 10:
-            self._respond = RESPOSTA['aumentar']
-
-        return self._respond
+        if teams_score[0] < 11:
+            if teams_score[0] + current_score < 12:
+                if self._good_hand:
+                    return RESPOSTA['aumentar']
+                if my_hand.trumps():
+                    return RESPOSTA['aceitar']
+                return RESPOSTA['correr']
+            return RESPOSTA['aceitar']      
+        
+        return RESPOSTA['aceitar']
 
 
 def pair_name():
