@@ -156,9 +156,9 @@ class PlayersHand(CheckCards):
         checkPlays = CheckCards(_last_cards)
         sorted_plays = checkPlays.sortPlays(current_round)
 
-        last_play =  sorted_plays[-1]
-        winning_position = last_play[0]    
-        winning_card = last_play[1]    
+        winning_play =  sorted_plays[0]
+        winning_position = winning_play[0]    
+        winning_card = winning_play[1]    
         
         if winning_position == self._position: 
             stronger = False
